@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions._
 
 import analyzer.implicits._
 
-object UserLogin {
+object LoginAnalyses {
 
   val timestampDiff = udf((t1: Timestamp, t2: Timestamp) => {
     (t2.getTime - t1.getTime) / 1000
@@ -39,11 +39,11 @@ object UserLogin {
       .withColumn("row", row_number().over(win))
       .as("login")
 
-      login
-        .join(logouts, $"login.ip" === $"logout.ip"
-          and $"login.user" === $"logout.user"
-          and $"login.row" === $"logout.row"
-        ,"left")
+    login
+      .join(logouts, $"login.ip" === $"logout.ip"
+        and $"login.user" === $"logout.user"
+        and $"login.row" === $"logout.row"
+        , "left")
       .withColumn("end", $"logout.time")
       .withColumn("duration", timestampDiff($"login.time", $"end"))
       .select($"login.ip", $"login.user", $"login.time".as("start"), $"end", $"duration")
@@ -64,26 +64,24 @@ object UserLogin {
       .mapGroups(currentOpenSessions)
   }
 
-  def currentOpenSessions(user: String, sessions: Iterator[Session]):OpenSessions = {
+  def currentOpenSessions(user: String, sessions: Iterator[Session]): OpenSessions = {
     val defaultTime = Timestamp.from(Instant.now())
     val allSessions = sessions.toList //naive solution, all sessions for a given user must fit in memory
 
-   allSessions
+    allSessions
       .foldLeft(OpenSessions(user, 0))((acc, cs) => {
         val currentSessions = allSessions
           .filter(s => {
-            println(s.start)
-            println(s.end)
             (s.start.compareTo(cs.start) <= 0) &&
-            s.end.getOrElse(defaultTime)
-              .after(cs.start)
+              s.end.getOrElse(defaultTime)
+                .after(cs.start)
           }).size
 
-        if(acc.openSessions >= currentSessions)
+        if (acc.openSessions >= currentSessions)
           acc
         else
-          acc.copy(openSessions=currentSessions)
-    })
+          acc.copy(openSessions = currentSessions)
+      })
   }
 
 }

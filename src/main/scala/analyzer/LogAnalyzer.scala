@@ -1,14 +1,10 @@
 package analyzer
 
-import java.sql.Timestamp
-import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalTime}
+import scala.util.{Failure, Success, Try}
 
 import org.apache.log4j.LogManager
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-
-import scala.util.{Failure, Success, Try}
 
 object LogAnalyzer {
 
@@ -19,40 +15,17 @@ object LogAnalyzer {
     import spark.implicits._
 
     val logsDF = spark.read.text(inputPrefix)
-    val parsed = parseLogs(spark, logsDF)
-  }
+    val access = LogParser.parseLogs(logsDF)
+    access.write.csv(s"${outputPrefix}/logs.csv")
 
-  def parseLogs(spark: SparkSession, logsDF: DataFrame) = {
-    import spark.implicits._
+    val mostUsersPerIp = LoginAnalyses.mostUsersPerIP(access)
+    val sessions = LoginAnalyses.sessions(access)
+    val higestOpenSessions = LoginAnalyses.openSessions(sessions)
+    val averageSessions = LoginAnalyses.sessionAverage(sessions)
 
-    logsDF
-      .flatMap(matchLogs)
-  }
-
-  def parseTime(time: String) = {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-    Try(Timestamp.valueOf(LocalTime.parse(time, formatter).atDate(LocalDate.now())))
-  }
-
-  def parseIp(ip: String) = {
-    val rex = "^(?:[0-9]{1,3}.){3}[0-9]{1,3}$".r
-    Try(rex.findFirstIn(ip).get)
-  }
-
-
-  def matchLogs(row: Row): Option[AccessLog] = {
-    val items: Array[String] = row.getAs[String]("value").split(",").map(_.trim)
-
-    (items.lift(0), items.lift(1), items.lift(2), items.lift(3)) match {
-      case (Some(ttime), Some(taction), Some(tip), Some(tuser)) => {
-        (parseTime(ttime), taction, tip, tuser) match {
-          case (Success(time), action, ip, user) if (action == "LOGIN") => Some(AccessLog(time, true, false, ip, user))
-          case (Success(time), action, ip, user) if (action == "LOGOUT") => Some(AccessLog(time, false, true, ip, user))
-          case _ => None
-        }
-      }
-      case _ => None
-    }
+    mostUsersPerIp.sort(-$"users").repartition(1).write.csv(s"${outputPrefix}/most-users-per-ip.csv")
+    higestOpenSessions.sort(-$"openSessions").repartition(1).write.csv(s"${outputPrefix}/open-sessions.csv")
+    averageSessions.sort(-$"averageDuration").repartition(1).write.csv(s"${outputPrefix}/average-session-duration.csv")
   }
 
   def defaultSession: SparkSession = {

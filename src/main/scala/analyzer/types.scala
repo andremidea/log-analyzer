@@ -14,7 +14,6 @@ case class SessionAverage(user: String, ip: String, averageDuration: Double)
 
 case class OpenSessions(user: String, openSessions: Long)
 
-
 object implicits extends SQLImplicits {
   // so i don't need to import spark.implicits._ everywhere
   protected override def _sqlContext = null

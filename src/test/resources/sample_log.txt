@@ -1,0 +1,13 @@
+ 21:00:00, LOGIN, 10.0.0.1, user1
+ 21:00:12,arusthars,arst,arst,ars,t,,arst
+ 21:02:00, LOGIN, 10.0.0.5, user1
+ 21:05:00, LOGOUT, 10.0.0.1, user1
+ 21:10:00, LOGIN, 10.0.0.2, user2
+ NOIIISEEE, NOISE, NOISE
+ 21:12:00, LOGIN, 10.0.0.2, user3
+ SHOULD NOT WORK
+ 21:15:00, LOGOUT, 10.0.0.2, user2
+ 21:22:00, LOGOUT, 10.0.0.2, user3
+ AHHH
+ 21:12:00, LOGOOUT,10.10.10, user20
+ 21:03:00, LOGOUT, 10.0.0.5, user1

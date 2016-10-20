@@ -1,7 +1,10 @@
 uxuxuxu, bbla
 21:00:00, LOGIN, 10.0.0.1, user1
+21:00:00, LOGIN, 10.0.0.1, use#!@()EI.,()
 21:12:00, bbla xuxu
 21:05:00, LOGOUT, 10.0.0.1, user1
+21:05:00, LOGIN, 300.0.0.1, user1
+21:05:00, LOGOUT, 300.0.0.1, user1
 21:12:00, bbla, bla, bla, bla ,bla
 21:12:00, bbla, bla, bla, bla ,bla asuh , asuht uh, ashu , ashu aus,hasu
 
